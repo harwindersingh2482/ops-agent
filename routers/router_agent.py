@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from services.groq_service import route_with_groq, chat_with_groq
 from services.trello_service import create_trello_card, move_card
+from utils.memory import set_last_task, get_last_task
 
 router = APIRouter()
 
@@ -19,22 +20,34 @@ def route(request: RouteRequest):
 
         # CREATE TASK
         if intent == "create_task":
-            card = create_trello_card(
-                title=routed.get("title", "Untitled Task"),
-                priority=routed.get("priority", "medium")
-            )
+            title = routed.get("title", "Untitled Task")
+            priority = routed.get("priority", "medium")
+
+            card = create_trello_card(title=title, priority=priority)
+
+            # 🔥 SAVE MEMORY
+            set_last_task(title)
+
             return {
                 "intent": "create_task",
                 "action_taken": "trello_card_created",
                 "task": card
             }
 
-        # UPDATE TASK (NEW 🔥)
+        # UPDATE TASK
         elif intent == "update_task":
+
+            task_name = routed.get("title")
+
+            # 🔥 IF NO TASK → USE MEMORY
+            if not task_name:
+                task_name = get_last_task()
+
             result = move_card(
-                card_name=routed.get("title", ""),
+                card_name=task_name,
                 target_list=routed.get("target_list", "Backlog")
             )
+
             return {
                 "intent": "update_task",
                 "action_taken": "task_moved",
@@ -43,18 +56,16 @@ def route(request: RouteRequest):
 
         # ANALYZE
         elif intent == "analyze":
-            analysis = chat_with_groq(request.message)
             return {
                 "intent": "analyze",
-                "analysis": analysis
+                "analysis": chat_with_groq(request.message)
             }
 
         # CHAT
         else:
-            response = chat_with_groq(request.message)
             return {
                 "intent": "chat",
-                "response": response
+                "response": chat_with_groq(request.message)
             }
 
     except Exception as e:
