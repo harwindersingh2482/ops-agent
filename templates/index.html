@@ -393,7 +393,29 @@ function renderResponse(data) {
   }
 }
 
-function addUserMsg(text) {
+felse if (intent === 'notion') {
+    const r = data.result;
+    const msg = r.error ? `⚠ ${r.error}` : `✅ Note saved: ${r.title}\n🔗 ${r.url}`;
+    addAgentMsg('notion', msg, 'create_task');
+  }
+  else if (intent === 'notion_delete') {
+    const msg = `🗑 Deleted: ${data.result.title}`;
+    addAgentMsg('notion_delete', msg, 'update_task');
+  }
+  else if (intent === 'notion_update') {
+    const msg = `✏️ Updated: ${data.result.title}`;
+    addAgentMsg('notion_update', msg, 'update_task');
+  }
+  else if (intent === 'notion_list') {
+    const pages = data.result.pages;
+    const msg = pages.length
+      ? `📋 Your Notion pages:\n\n${pages.map((p,i) => `${i+1}. ${p.title}`).join('\n')}`
+      : '📋 No pages found in Notion.';
+    addAgentMsg('notion_list', msg, 'analyze');
+  }
+  else {
+    addAgentMsg('chat', JSON.stringify(data, null, 2), null);
+  }unction addUserMsg(text) {
   const chat = document.getElementById('chat');
   const d = document.createElement('div');
   d.className = 'msg';
