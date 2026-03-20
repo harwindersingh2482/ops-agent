@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from services.groq_service import route_with_groq, chat_with_groq
 from services.trello_service import create_trello_card, move_card
 from utils.memory import set_last_task, get_last_task
+from utils.logger import add_log, get_logs
 
 router = APIRouter()
 
@@ -21,51 +22,56 @@ def route(request: RouteRequest):
         # CREATE TASK
         if intent == "create_task":
             title = routed.get("title", "Untitled Task")
-            priority = routed.get("priority", "medium")
+            card = create_trello_card(title=title)
 
-            card = create_trello_card(title=title, priority=priority)
-
-            # 🔥 SAVE MEMORY
             set_last_task(title)
+            add_log(f"Created task: {title}")
 
             return {
                 "intent": "create_task",
-                "action_taken": "trello_card_created",
-                "task": card
+                "task": card,
+                "logs": get_logs()
             }
 
         # UPDATE TASK
         elif intent == "update_task":
-
-            task_name = routed.get("title")
-
-            # 🔥 IF NO TASK → USE MEMORY
-            if not task_name:
-                task_name = get_last_task()
+            task_name = routed.get("title") or get_last_task()
 
             result = move_card(
                 card_name=task_name,
                 target_list=routed.get("target_list", "Backlog")
             )
 
+            add_log(f"Moved task: {task_name} → {routed.get('target_list')}")
+
             return {
                 "intent": "update_task",
-                "action_taken": "task_moved",
-                "result": result
+                "result": result,
+                "logs": get_logs()
             }
 
         # ANALYZE
         elif intent == "analyze":
+            analysis = chat_with_groq(request.message)
+
+            add_log("Analyzed business data")
+
             return {
                 "intent": "analyze",
-                "analysis": chat_with_groq(request.message)
+                "analysis": analysis,
+                "logs": get_logs()
             }
 
         # CHAT
         else:
+            response = chat_with_groq(request.message)
+
+            add_log("Chat interaction")
+
             return {
                 "intent": "chat",
-                "response": chat_with_groq(request.message)
+                "response": response,
+                "logs": get_logs()
             }
 
     except Exception as e:
