@@ -33,16 +33,19 @@ def route(request: RouteRequest):
                 "logs": get_logs()
             }
 
-        # UPDATE TASK
+        # UPDATE TASK (FIXED 🔥)
         elif intent == "update_task":
             task_name = routed.get("title") or get_last_task()
+            target = routed.get("target_list", "Backlog")
 
             result = move_card(
                 card_name=task_name,
-                target_list=routed.get("target_list", "Backlog")
+                target_list=target
             )
 
-            add_log(f"Moved task: {task_name} → {routed.get('target_list')}")
+            # ✅ ONLY LOG IF SUCCESS
+            if result.get("status") == "moved":
+                add_log(f"Moved task: {result.get('title')} → {target}")
 
             return {
                 "intent": "update_task",
