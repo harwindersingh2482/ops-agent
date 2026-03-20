@@ -18,10 +18,10 @@ def route(request: RouteRequest):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     try:
-        # 🔥 HANDLE SELECTION FIRST
-        if message.startswith("select"):
+        # 🔥 HANDLE NUMBER OR SELECT
+        if message.isdigit() or message.startswith("select"):
             try:
-                index = int(message.split()[1]) - 1
+                index = int(message.split()[-1]) - 1
                 options = get_options()
 
                 if options and 0 <= index < len(options):
@@ -52,7 +52,7 @@ def route(request: RouteRequest):
                     "intent": "update_task",
                     "result": {
                         "status": "error",
-                        "message": "Please use: select 1, select 2, etc."
+                        "message": "Use: 1, 2 or 'select 1'"
                     },
                     "logs": get_logs()
                 }
@@ -82,7 +82,6 @@ def route(request: RouteRequest):
 
             result = move_card(task_name, target)
 
-            # 🔥 MULTIPLE MATCH HANDLING
             if result.get("status") == "multiple_found":
                 set_options(result.get("options"))
 
@@ -98,7 +97,6 @@ def route(request: RouteRequest):
         # ANALYZE
         elif intent == "analyze":
             analysis = chat_with_groq(request.message)
-
             add_log("Analyzed business data")
 
             return {
@@ -110,7 +108,6 @@ def route(request: RouteRequest):
         # CHAT
         else:
             response = chat_with_groq(request.message)
-
             add_log("Chat interaction")
 
             return {
