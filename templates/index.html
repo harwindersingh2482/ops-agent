@@ -40,15 +40,47 @@ async function send() {
 
     let output = "";
 
+    // CHAT
     if (data.intent === "chat") {
         output = "🤖 " + data.response;
     }
+
+    // CREATE TASK
     else if (data.intent === "create_task") {
         output = "✅ Task Created: " + data.task.title;
     }
+
+    // UPDATE TASK (FIXED 🔥)
     else if (data.intent === "update_task") {
-        output = "🔄 Task Updated";
+
+        if (data.result.status === "multiple_found") {
+            output = "⚠️ Multiple tasks found:\n\n";
+            data.result.options.forEach((task, i) => {
+                output += (i+1) + ". " + task + "\n";
+            });
+            output += "\n👉 Please be more specific.";
+        }
+
+        else if (data.result.status === "not_found") {
+            output = "❌ Task not found.";
+        }
+
+        else if (data.result.status === "error") {
+            output = "⚠️ " + data.result.message;
+        }
+
+        else if (data.result.status === "moved") {
+            output = "✅ Task Updated!\n\n" +
+                     "Title: " + data.result.title + "\n" +
+                     "Moved to: " + data.result.target_list;
+        }
+
+        else {
+            output = JSON.stringify(data, null, 2);
+        }
     }
+
+    // ANALYZE
     else if (data.intent === "analyze") {
         output = "📊 " + data.analysis;
     }
