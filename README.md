@@ -8,7 +8,7 @@ OpsAgent is a production-grade AI operations agent that converts natural languag
 
 ## Live Demo
 
-🚀 **[https://harry-api.onrender.com](https://harry-api.onrender.com)**
+🚀 **[https://ops-agent-jdjn.onrender.com](https://ops-agent-jdjn.onrender.com)**
 
 > Note: Hosted on Render free tier — first request may take ~30s to wake up.
 
@@ -118,7 +118,7 @@ ops-agent/
 Accepts natural language, detects intent, executes action.
 
 ```bash
-curl -X POST https://harry-api.onrender.com/route \
+curl -X POST https://ops-agent-jdjn.onrender.com/route \
   -H "Content-Type: application/json" \
   -d '{"message": "Create a task: Fix payment bug"}'
 ```
@@ -141,7 +141,7 @@ curl -X POST https://harry-api.onrender.com/route \
 
 ### `POST /chat` — AI Conversation
 ```bash
-curl -X POST https://harry-api.onrender.com/chat \
+curl -X POST https://ops-agent-jdjn.onrender.com/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "What is a deployment pipeline?"}'
 ```
@@ -150,7 +150,7 @@ curl -X POST https://harry-api.onrender.com/chat \
 
 ### `POST /analyze` — Data Analysis
 ```bash
-curl -X POST https://harry-api.onrender.com/analyze \
+curl -X POST https://ops-agent-jdjn.onrender.com/analyze \
   -H "Content-Type: application/json" \
   -d '{"data": "Server CPU at 94%, memory at 87%, 3 failed deploys today"}'
 ```
@@ -159,7 +159,7 @@ curl -X POST https://harry-api.onrender.com/analyze \
 
 ### `GET /health` — System Status
 ```bash
-curl https://harry-api.onrender.com/health
+curl https://ops-agent-jdjn.onrender.com/health
 ```
 ```json
 { "status": "ok", "version": "1.0.0" }
