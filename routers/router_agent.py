@@ -57,6 +57,16 @@ def route(request: RouteRequest):
                     "logs": get_logs()
                 }
 
+        # CHECK FOR NOTION INTENT
+        if any(word in message for word in ["notion", "note", "log", "save to notion", "add to notion"]):
+            from services.notion_service import create_notion_page
+            title = request.message.replace("add to notion", "").replace("save to notion", "").replace("note:", "").replace("notion:", "").strip()
+            if not title:
+                title = "OpsAgent Note"
+            result = create_notion_page(title=title, content=request.message)
+            add_log(f"Created Notion page: {title}")
+            return {"intent": "notion", "result": result, "logs": get_logs()}
+
         # CHECK FOR GITHUB INTENT
         if any(word in message for word in ["github", "repo", "issues", "repository"]):
             import re

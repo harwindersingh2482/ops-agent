@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
-from routers import chat, router_agent, ops, github
+from routers import chat, router_agent, ops, github, notion
 
 app = FastAPI()
 
@@ -22,6 +22,7 @@ app.include_router(chat.router)
 app.include_router(router_agent.router)
 app.include_router(ops.router)
 app.include_router(github.router)
+app.include_router(notion.router)
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
