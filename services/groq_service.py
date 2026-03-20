@@ -34,6 +34,7 @@ Your job:
 Possible intents:
 - chat: general question or conversation
 - create_task: user wants to create a task or ticket
+- update_task: user wants to update or move a task
 - analyze: user wants to analyze data or get insights
 
 Output format:
@@ -42,7 +43,8 @@ Output format:
   "title": "task title if intent is create_task, else null",
   "priority": "high, medium, or low if intent is create_task, else null",
   "message": "original message or analysis request",
-  "confidence": "high, medium, or low"
+  "confidence": "high, medium, or low",
+  "target_list": "Backlog, In Progress, or Done if update_task"
 }"""
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
