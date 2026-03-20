@@ -60,7 +60,7 @@ def route(request: RouteRequest):
         # CHECK FOR NOTION INTENT
         if any(word in message for word in ["notion", "note", "log", "save to notion", "add to notion"]):
             from services.notion_service import create_notion_page
-            title = request.message.replace("add to notion", "").replace("save to notion", "").replace("note:", "").replace("notion:", "").strip()
+            title = request.message.lower().replace("add to notion", "").replace("save to notion", "").replace("note:", "").replace("notion:", "").replace('"', "").strip().capitalize()
             if not title:
                 title = "OpsAgent Note"
             result = create_notion_page(title=title, content=request.message)
