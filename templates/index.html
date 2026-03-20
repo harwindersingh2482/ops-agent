@@ -60,8 +60,25 @@ async function send() {
     });
 
     const data = await res.json();
-    document.getElementById("response").innerText =
-        JSON.stringify(data, null, 2);
+
+    let output = "";
+
+    if (data.intent === "chat") {
+        output = "🤖 OpsAgent:\n\n" + data.response;
+    }
+    else if (data.intent === "create_task") {
+        output = "✅ Task Created!\n\n" +
+                 "Title: " + data.task.title + "\n" +
+                 "Link: " + data.task.url;
+    }
+    else if (data.intent === "analyze") {
+        output = "📊 Analysis:\n\n" + data.analysis;
+    }
+    else {
+        output = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById("response").innerText = output;
 }
 </script>
 
