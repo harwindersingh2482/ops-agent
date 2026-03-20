@@ -20,7 +20,6 @@ def get_list_id(list_name: str):
     return lists[0]["id"]
 
 
-# ✅ CREATE TASK (RESTORED)
 def create_trello_card(title: str, priority: str = "medium", description: str = ""):
     list_id = get_list_id("Backlog")
 
@@ -41,8 +40,7 @@ def create_trello_card(title: str, priority: str = "medium", description: str = 
         "desc": description or f"Task created by OpsAgent\nPriority: {priority.upper()}"
     }
 
-    response = requests.post(url, params=params)
-    card = response.json()
+    card = requests.post(url, params=params).json()
 
     return {
         "id": card.get("id"),
@@ -52,8 +50,16 @@ def create_trello_card(title: str, priority: str = "medium", description: str = 
     }
 
 
-# ✅ MOVE SINGLE TASK (WITH MULTI MATCH HANDLING)
+# 🔥 FIXED FUNCTION
 def move_card(card_name: str, target_list: str):
+
+    # 👉 HANDLE NULL / EMPTY
+    if not card_name:
+        return {
+            "status": "error",
+            "message": "No task specified. Please mention task name."
+        }
+
     url = f"https://api.trello.com/1/boards/{TRELLO_BOARD_ID}/cards"
     params = {"key": TRELLO_API_KEY, "token": TRELLO_TOKEN}
     cards = requests.get(url, params=params).json()
@@ -84,36 +90,5 @@ def move_card(card_name: str, target_list: str):
     return {
         "status": "moved",
         "title": card["name"],
-        "target_list": target_list
-    }
-
-
-# ✅ MOVE MULTIPLE TASKS
-def move_multiple_cards(keyword: str, target_list: str):
-    url = f"https://api.trello.com/1/boards/{TRELLO_BOARD_ID}/cards"
-    params = {"key": TRELLO_API_KEY, "token": TRELLO_TOKEN}
-    cards = requests.get(url, params=params).json()
-
-    matched_cards = [c for c in cards if keyword.lower() in c["name"].lower()]
-
-    if not matched_cards:
-        return {"message": "No matching cards found"}
-
-    list_id = get_list_id(target_list)
-
-    moved = []
-    for card in matched_cards:
-        move_url = f"https://api.trello.com/1/cards/{card['id']}"
-        move_params = {
-            "key": TRELLO_API_KEY,
-            "token": TRELLO_TOKEN,
-            "idList": list_id
-        }
-        requests.put(move_url, params=move_params)
-        moved.append(card["name"])
-
-    return {
-        "moved_count": len(moved),
-        "tasks": moved,
         "target_list": target_list
     }
