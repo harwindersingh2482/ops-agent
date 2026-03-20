@@ -58,6 +58,37 @@ def route(request: RouteRequest):
                 }
 
         # CHECK FOR NOTION INTENT
+        if any(word in message for word in ["notion", "note", "save to notion", "add to notion", "delete notion", "delete from notion", "update notion", "list notion", "show notion"]):
+            from services.notion_service import create_notion_page, find_notion_page, delete_notion_page, update_notion_page, get_notion_pages
+            # DELETE
+            if any(w in message for w in ["delete", "remove"]):
+                title = message.replace("delete from notion","").replace("remove from notion","").replace("delete notion","").replace("remove notion","").strip()
+                page = find_notion_page(title)
+                if not page:
+                    return {"intent":"notion","result":{"error":f"Page not found: {title}"},"logs":get_logs()}
+                result = delete_notion_page(page["id"])
+                add_log(f"Deleted Notion page: {title}")
+                return {"intent":"notion_delete","result":{**result,"title":title},"logs":get_logs()}
+            # LIST
+            elif any(w in message for w in ["list", "show", "get"]):
+                result = get_notion_pages()
+                return {"intent":"notion_list","result":result,"logs":get_logs()}
+            # UPDATE
+            elif any(w in message for w in ["update", "edit", "change"]):
+                title = message.replace("update notion","").replace("edit notion","").strip()
+                page = find_notion_page(title)
+                if not page:
+                    return {"intent":"notion","result":{"error":f"Page not found: {title}"},"logs":get_logs()}
+                result = update_notion_page(page["id"], content=request.message)
+                add_log(f"Updated Notion page: {title}")
+                return {"intent":"notion_update","result":result,"logs":get_logs()}
+            # CREATE
+            else:
+                title = message.replace("add to notion","").replace("save to notion","").replace("note:","").replace("notion:","").replace(chr(34),"").strip().capitalize()
+                if not title: title = "OpsAgent Note"
+                result = create_notion_page(title=title, content=request.message)
+                add_log(f"Created Notion page: {title}")
+                return {"intent":"notion","result":result,"logs":get_logs()}
         if any(word in message for word in ["notion", "note", "log", "save to notion", "add to notion"]):
             from services.notion_service import create_notion_page
             title = request.message.lower().replace("add to notion", "").replace("save to notion", "").replace("note:", "").replace("notion:", "").replace('"', "").strip().capitalize()
