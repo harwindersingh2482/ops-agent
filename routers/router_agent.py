@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from services.groq_service import route_with_groq, chat_with_groq
 from services.trello_service import create_trello_card, move_card
-from utils.memory import set_last_task, get_last_task
+from utils.memory import set_last_task, get_last_task, set_options, get_options, clear_options
 from utils.logger import add_log, get_logs
 
 router = APIRouter()
@@ -12,10 +12,52 @@ class RouteRequest(BaseModel):
 
 @router.post("/route")
 def route(request: RouteRequest):
-    if not request.message.strip():
+    message = request.message.strip().lower()
+
+    if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     try:
+        # 🔥 HANDLE SELECTION FIRST
+        if message.startswith("select"):
+            try:
+                index = int(message.split()[1]) - 1
+                options = get_options()
+
+                if options and 0 <= index < len(options):
+                    selected_task = options[index]
+                    clear_options()
+
+                    result = move_card(selected_task, "Done")
+
+                    if result.get("status") == "moved":
+                        add_log(f"Moved task: {selected_task} → Done")
+
+                    return {
+                        "intent": "update_task",
+                        "result": result,
+                        "logs": get_logs()
+                    }
+                else:
+                    return {
+                        "intent": "update_task",
+                        "result": {
+                            "status": "error",
+                            "message": "Invalid selection"
+                        },
+                        "logs": get_logs()
+                    }
+            except:
+                return {
+                    "intent": "update_task",
+                    "result": {
+                        "status": "error",
+                        "message": "Please use: select 1, select 2, etc."
+                    },
+                    "logs": get_logs()
+                }
+
+        # NORMAL FLOW
         routed = route_with_groq(request.message)
         intent = routed.get("intent")
 
@@ -33,18 +75,18 @@ def route(request: RouteRequest):
                 "logs": get_logs()
             }
 
-        # UPDATE TASK (FIXED 🔥)
+        # UPDATE TASK
         elif intent == "update_task":
             task_name = routed.get("title") or get_last_task()
             target = routed.get("target_list", "Backlog")
 
-            result = move_card(
-                card_name=task_name,
-                target_list=target
-            )
+            result = move_card(task_name, target)
 
-            # ✅ ONLY LOG IF SUCCESS
-            if result.get("status") == "moved":
+            # 🔥 MULTIPLE MATCH HANDLING
+            if result.get("status") == "multiple_found":
+                set_options(result.get("options"))
+
+            elif result.get("status") == "moved":
                 add_log(f"Moved task: {result.get('title')} → {target}")
 
             return {
