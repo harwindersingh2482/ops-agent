@@ -63,17 +63,51 @@ async function send() {
 
     let output = "";
 
+    // CHAT
     if (data.intent === "chat") {
         output = "🤖 OpsAgent:\n\n" + data.response;
     }
+
+    // CREATE TASK
     else if (data.intent === "create_task") {
         output = "✅ Task Created!\n\n" +
                  "Title: " + data.task.title + "\n" +
                  "Link: " + data.task.url;
     }
+
+    // UPDATE TASK (single or multiple handling)
+    else if (data.intent === "update_task") {
+
+        // MULTIPLE MATCH CASE 🔥
+        if (data.result && data.result.status === "multiple_found") {
+            output = "⚠️ Multiple tasks found:\n\n";
+
+            data.result.options.forEach((task, i) => {
+                output += (i + 1) + ". " + task + "\n";
+            });
+
+            output += "\n👉 Please be more specific.";
+        }
+
+        // SUCCESS CASE
+        else if (data.result && data.result.status === "moved") {
+            output = "✅ Task Updated!\n\n" +
+                     "Title: " + data.result.title + "\n" +
+                     "Moved to: " + data.result.target_list;
+        }
+
+        // FALLBACK
+        else {
+            output = JSON.stringify(data, null, 2);
+        }
+    }
+
+    // ANALYZE
     else if (data.intent === "analyze") {
         output = "📊 Analysis:\n\n" + data.analysis;
     }
+
+    // DEFAULT
     else {
         output = JSON.stringify(data, null, 2);
     }
