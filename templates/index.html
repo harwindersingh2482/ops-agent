@@ -376,6 +376,14 @@ function renderResponse(data) {
     }
   }
 
+  else if (intent === 'github_analyze') {
+    const r = data.result;
+    const msg = `📊 GitHub: ${r.repo}\n\n${r.analysis}${
+      r.tasks_created?.length ? `\n\n✅ Created ${r.tasks_created.length} Trello tasks` : ""
+    }`;
+    addAgentMsg('github_analyze', msg, 'analyze');
+  }
+
   else if (intent === 'analyze') {
     addAgentMsg('analyze', data.analysis, intent);
   }

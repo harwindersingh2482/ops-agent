@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
-from routers import chat, router_agent, ops
+from routers import chat, router_agent, ops, github
 
 app = FastAPI()
 
@@ -21,6 +21,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(chat.router)
 app.include_router(router_agent.router)
 app.include_router(ops.router)
+app.include_router(github.router)
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):

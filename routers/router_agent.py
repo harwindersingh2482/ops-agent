@@ -57,6 +57,18 @@ def route(request: RouteRequest):
                     "logs": get_logs()
                 }
 
+        # CHECK FOR GITHUB INTENT
+        if any(word in message for word in ["github", "repo", "issues", "repository"]):
+            import re
+            repo_match = re.search(r"github\.com/[w.-]+/[w.-]+|[w.-]+/[w.-]+", request.message)
+            repo = repo_match.group(0) if repo_match else None
+            if repo:
+                from routers.github import analyze_issues, GithubAnalyzeRequest
+                create = any(w in message for w in ["create", "task", "trello", "add"])
+                result = analyze_issues(GithubAnalyzeRequest(repo=repo, create_tasks=create))
+                add_log(f"GitHub analysis: {repo}")
+                return {"intent": "github_analyze", "result": result, "logs": get_logs()}
+
         # NORMAL FLOW
         routed = route_with_groq(request.message)
         intent = routed.get("intent")
@@ -118,3 +130,6 @@ def route(request: RouteRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Import github analyze at top level
+from services.github_service import get_open_issues
