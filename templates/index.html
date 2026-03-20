@@ -1,85 +1,505 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>OpsAgent</title>
-    <style>
-        body { font-family: Arial; max-width: 800px; margin: auto; padding: 30px; background: #f5f5f5; }
-        input { width: 70%; padding: 12px; }
-        button { padding: 12px; background: black; color: white; }
-        .box { background: white; padding: 15px; margin-top: 20px; border-radius: 8px; }
-        .logs { font-size: 12px; color: gray; margin-top: 10px; }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OpsAgent</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b0f;
+  --s1:#111318;
+  --s2:#16191f;
+  --s3:#1c2028;
+  --s4:#232834;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --accent:#00d4aa;
+  --accent-dim:rgba(0,212,170,0.1);
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+  --green:#00d4aa;
+  --amber:#f0b429;
+  --red:#fc5c65;
+  --blue:#60a5fa;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;
+  height:100vh;display:flex;flex-direction:column;
+  overflow:hidden;font-size:14px;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:4px}
+
+/* HEADER */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:52px;
+  background:var(--s1);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-bars{display:flex;align-items:center;gap:2px}
+.bar{width:3px;border-radius:2px;background:var(--accent);animation:barAnim 1.8s ease-in-out infinite}
+.bar:nth-child(1){height:10px;animation-delay:0s}
+.bar:nth-child(2){height:16px;animation-delay:0.12s}
+.bar:nth-child(3){height:12px;animation-delay:0.24s}
+.bar:nth-child(4){height:8px;animation-delay:0.36s}
+@keyframes barAnim{0%,100%{opacity:1}50%{opacity:0.25}}
+.brand-name{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;letter-spacing:0.02em}
+.brand-sub{font-size:11px;color:var(--muted);margin-left:4px}
+.status{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.15);
+  padding:4px 10px;border-radius:999px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);
+}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* LAYOUT */
+.layout{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* CHAT */
+.chat-col{flex:1;display:flex;flex-direction:column;min-width:0}
+#chat{
+  flex:1;overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:12px;
+}
+
+/* WELCOME */
+.welcome{
+  margin:auto;text-align:center;padding:40px 20px;max-width:440px;
+}
+.welcome h2{font-size:20px;font-weight:600;margin-bottom:8px;letter-spacing:-0.02em}
+.welcome p{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:20px}
+.quick-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qbtn{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;cursor:pointer;
+  font-size:12px;color:var(--muted2);text-align:left;
+  transition:all 0.15s;font-family:'Inter',sans-serif;
+}
+.qbtn:hover{background:var(--s3);border-color:var(--border2);color:var(--text)}
+.qbtn-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:3px}
+
+/* MESSAGES */
+.msg{animation:fadeUp 0.2s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* user */
+.user-msg{display:flex;justify-content:flex-end}
+.user-bubble{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:12px 12px 3px 12px;
+  padding:10px 14px;max-width:70%;
+  font-size:13.5px;line-height:1.6;
+}
+.user-time{text-align:right;font-size:10px;color:var(--muted);margin-top:3px;font-family:'IBM Plex Mono',monospace}
+
+/* agent */
+.agent-msg{}
+.agent-header{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.agent-icon{
+  width:22px;height:22px;border-radius:5px;flex-shrink:0;
+  background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+}
+.agent-name{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent)}
+.agent-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.agent-bubble{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:3px 12px 12px 12px;
+  padding:12px 14px;max-width:85%;
+  font-size:13.5px;line-height:1.68;
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* intent badge */
+.intent{
+  display:inline-block;font-family:'IBM Plex Mono',monospace;
+  font-size:9px;text-transform:uppercase;letter-spacing:0.08em;
+  padding:2px 7px;border-radius:3px;margin-bottom:7px;
+}
+.intent.chat{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.intent.create_task{background:rgba(0,212,170,0.1);color:var(--accent);border:1px solid rgba(0,212,170,0.2)}
+.intent.update_task{background:rgba(240,180,41,0.1);color:var(--amber);border:1px solid rgba(240,180,41,0.2)}
+.intent.analyze{background:rgba(193,128,255,0.1);color:#c180ff;border:1px solid rgba(193,128,255,0.2)}
+
+/* thinking */
+.thinking{display:flex;align-items:center;gap:4px;padding:2px 0}
+.tbar{width:3px;border-radius:2px;background:var(--accent);animation:tAnim 1s ease-in-out infinite}
+.tbar:nth-child(1){height:10px;animation-delay:0s}
+.tbar:nth-child(2){height:16px;animation-delay:0.1s}
+.tbar:nth-child(3){height:12px;animation-delay:0.2s}
+.tbar:nth-child(4){height:8px;animation-delay:0.3s}
+.tbar:nth-child(5){height:14px;animation-delay:0.4s}
+@keyframes tAnim{0%,100%{opacity:0.2}50%{opacity:1}}
+.thinking-text{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px}
+
+/* options (multi-step) */
+.options{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.opt{
+  display:flex;align-items:center;gap:10px;
+  background:var(--s3);border:1px solid var(--border);
+  border-radius:7px;padding:9px 12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.opt:hover{background:var(--s4);border-color:rgba(0,212,170,0.3)}
+.opt-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);width:16px;flex-shrink:0}
+.opt-text{font-size:12.5px;color:var(--muted2)}
+.opt-hint{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* RIGHT PANEL */
+.right-panel{
+  width:210px;flex-shrink:0;
+  background:var(--s1);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-block{padding:12px 14px;border-bottom:1px solid var(--border)}
+.panel-label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px}
+.ep{display:flex;align-items:center;gap:7px;padding:4px 0}
+.ep-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ep-dot.ok{background:var(--accent)}
+.ep-dot.warn{background:var(--amber)}
+.ep-name{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2)}
+.ep-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px}
+.ep-tag.ok{background:rgba(0,212,170,0.08);color:var(--accent)}
+
+.logs-wrap{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:4px}
+.log-item{padding:5px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;text-transform:uppercase}
+.log-tag.ok{color:var(--accent)}
+.log-tag.warn{color:var(--amber)}
+.log-tag.info{color:var(--blue)}
+.log-msg{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4}
+.log-time{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);opacity:0.4;margin-top:1px}
+
+/* INPUT */
+#input-area{
+  padding:12px 20px 16px;
+  background:var(--bg);border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.input-row{
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:12px;padding:9px 12px;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.input-row:focus-within{
+  border-color:rgba(0,212,170,0.3);
+  box-shadow:0 0 0 3px rgba(0,212,170,0.05);
+}
+textarea{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;
+  resize:none;line-height:1.5;max-height:110px;overflow-y:auto;padding:2px 0;
+}
+textarea::placeholder{color:var(--muted)}
+#send-btn{
+  width:34px;height:34px;border-radius:8px;border:none;
+  background:var(--accent);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;color:#0a0b0f;font-size:16px;font-weight:700;
+}
+#send-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+#send-btn:active{transform:scale(0.95)}
+#send-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+#send-btn svg{width:15px;height:15px;stroke:#0a0b0f;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.input-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);opacity:0.45;margin-top:7px;text-align:center}
+</style>
 </head>
 <body>
 
-<h2>🤖 OpsAgent</h2>
+<header>
+  <div class="brand">
+    <div class="brand-bars">
+      <div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div>
+    </div>
+    <span class="brand-name">OpsAgent</span>
+    <span class="brand-sub">/ AI Operations Copilot</span>
+  </div>
+  <div class="status">
+    <div class="dot"></div>
+    <span>Live</span>
+  </div>
+</header>
 
-<input id="message" placeholder="Type command">
-<button onclick="send()">Send</button>
+<div class="layout">
 
-<div class="box">
-    <div id="response"></div>
+  <!-- CHAT -->
+  <div class="chat-col">
+    <div id="chat">
+      <div class="welcome" id="welcome">
+        <h2>What do you need done?</h2>
+        <p>Type in plain English. I'll route your command, execute the right action, and show you what happened.</p>
+        <div class="quick-btns">
+          <button class="qbtn" onclick="usePrompt('What can you do?')">
+            <span class="qbtn-label">Capabilities</span>
+            See all actions
+          </button>
+          <button class="qbtn" onclick="usePrompt('Create a task: Fix login bug on production')">
+            <span class="qbtn-label">Create Task</span>
+            Add card to Trello
+          </button>
+          <button class="qbtn" onclick="usePrompt('Move payment bug to Done')">
+            <span class="qbtn-label">Move Task</span>
+            Update card status
+          </button>
+          <button class="qbtn" onclick="usePrompt('Analyze: our API error rate jumped 30% today')">
+            <span class="qbtn-label">Analyze</span>
+            AI data analysis
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-block">
+      <div class="panel-label">Endpoints</div>
+      <div class="ep"><div class="ep-dot ok"></div><span class="ep-name">/route</span><span class="ep-tag ok">OK</span></div>
+      <div class="ep"><div class="ep-dot ok"></div><span class="ep-name">/chat</span><span class="ep-tag ok">OK</span></div>
+      <div class="ep"><div class="ep-dot ok"></div><span class="ep-name">/analyze</span><span class="ep-tag ok">OK</span></div>
+      <div class="ep"><div class="ep-dot ok"></div><span class="ep-name">/health</span><span class="ep-tag ok">OK</span></div>
+    </div>
+    <div class="panel-block" style="border-bottom:none;padding-bottom:6px">
+      <div class="panel-label">Activity</div>
+    </div>
+    <div class="logs-wrap" id="logs-wrap">
+      <div class="log-item">
+        <div class="log-tag ok">READY</div>
+        <div class="log-msg">OpsAgent initialized</div>
+        <div class="log-time">just now</div>
+      </div>
+    </div>
+  </aside>
+
 </div>
 
-<div class="box">
-    <strong>Activity Logs:</strong>
-    <div id="logs" class="logs"></div>
+<div id="input-area">
+  <div class="input-row">
+    <textarea id="msg" rows="1" placeholder="Type a command in plain English…"></textarea>
+    <button id="send-btn" onclick="send()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+    </button>
+  </div>
+  <p class="input-hint">Enter to send · Shift+Enter for new line</p>
 </div>
 
 <script>
-async function send() {
-    const message = document.getElementById("message").value;
+const ta = document.getElementById('msg');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
+});
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
 
-    const res = await fetch("/route", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ message })
+function usePrompt(t) { ta.value = t; ta.dispatchEvent(new Event('input')); send(); }
+
+async function send() {
+  const message = ta.value.trim();
+  if (!message) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  ta.value = ''; ta.style.height = 'auto';
+  document.getElementById('welcome')?.remove();
+
+  addUserMsg(message);
+  const { bubble, remove } = addThinking();
+  scrollDown();
+
+  try {
+    const res = await fetch('/route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
     });
 
     const data = await res.json();
-
-    let output = "";
-
-    if (data.intent === "chat") {
-        output = "🤖 " + data.response;
-    }
-
-    else if (data.intent === "create_task") {
-        output = "✅ Task Created: " + data.task.title;
-    }
-
-    else if (data.intent === "update_task") {
-
-        if (data.result.status === "multiple_found") {
-            output = "⚠️ Multiple tasks found:\n\n";
-
-            data.result.options.forEach((task, i) => {
-                output += (i+1) + ". " + task + "\n";
-            });
-
-            output += "\n👉 Type: select 1 / select 2";
-        }
-
-        else if (data.result.status === "moved") {
-            output = "✅ Task Updated:\n" + data.result.title;
-        }
-
-        else {
-            output = "⚠️ " + (data.result.message || "Something went wrong");
-        }
-    }
-
-    else if (data.intent === "analyze") {
-        output = "📊 " + data.analysis;
-    }
-
-    document.getElementById("response").innerText = output;
+    remove();
+    renderResponse(data);
 
     if (data.logs) {
-        document.getElementById("logs").innerText = data.logs.join("\n");
+      data.logs.forEach(l => addLog(l));
     }
-}
-</script>
 
+  } catch(err) {
+    remove();
+    addAgentMsg('error', '⚠ Could not reach backend. Is the server running?', null);
+    addLog('ERR: ' + err.message, 'warn');
+  }
+
+  btn.disabled = false;
+  scrollDown();
+}
+
+function renderResponse(data) {
+  const intent = data.intent;
+
+  if (intent === 'chat') {
+    addAgentMsg('chat', data.response, intent);
+  }
+
+  else if (intent === 'create_task') {
+    const t = data.task;
+    const msg = `✅ Task created\n\n${t.title}\n\n🔗 ${t.url}`;
+    addAgentMsg('create_task', msg, intent);
+  }
+
+  else if (intent === 'update_task') {
+    const r = data.result;
+
+    if (r.status === 'multiple_found') {
+      addAgentMsgWithOptions(r.options, intent);
+    }
+    else if (r.status === 'moved') {
+      addAgentMsg('update_task', `✅ Moved: ${r.title} → ${r.target_list}`, intent);
+    }
+    else if (r.status === 'not_found') {
+      addAgentMsg('update_task', `⚠ No task found matching that name.`, intent);
+    }
+    else {
+      addAgentMsg('update_task', `⚠ ${r.message || 'Something went wrong'}`, intent);
+    }
+  }
+
+  else if (intent === 'analyze') {
+    addAgentMsg('analyze', data.analysis, intent);
+  }
+
+  else {
+    addAgentMsg('chat', JSON.stringify(data, null, 2), null);
+  }
+}
+
+function addUserMsg(text) {
+  const chat = document.getElementById('chat');
+  const d = document.createElement('div');
+  d.className = 'msg';
+  d.innerHTML = `
+    <div class="user-msg">
+      <div>
+        <div class="user-bubble">${esc(text)}</div>
+        <div class="user-time">${ts()}</div>
+      </div>
+    </div>`;
+  chat.appendChild(d);
+}
+
+function addThinking() {
+  const chat = document.getElementById('chat');
+  const d = document.createElement('div');
+  d.className = 'msg';
+  d.innerHTML = `
+    <div class="agent-msg">
+      <div class="agent-header">
+        <div class="agent-icon">⚡</div>
+        <span class="agent-name">OpsAgent</span>
+      </div>
+      <div class="agent-bubble">
+        <div class="thinking">
+          <div class="tbar"></div><div class="tbar"></div><div class="tbar"></div>
+          <div class="tbar"></div><div class="tbar"></div>
+          <span class="thinking-text">Processing…</span>
+        </div>
+      </div>
+    </div>`;
+  chat.appendChild(d);
+  scrollDown();
+  return { bubble: d, remove: () => d.remove() };
+}
+
+function addAgentMsg(intent, text, intentKey) {
+  const chat = document.getElementById('chat');
+  const d = document.createElement('div');
+  d.className = 'msg';
+  const badge = intentKey ? `<div class="intent ${intentKey}">${intentKey.replace('_',' ')}</div>` : '';
+  d.innerHTML = `
+    <div class="agent-msg">
+      <div class="agent-header">
+        <div class="agent-icon">⚡</div>
+        <span class="agent-name">OpsAgent</span>
+        <span class="agent-time">${ts()}</span>
+      </div>
+      <div class="agent-bubble">${badge}<div>${esc(text)}</div></div>
+    </div>`;
+  chat.appendChild(d);
+}
+
+function addAgentMsgWithOptions(options, intentKey) {
+  const chat = document.getElementById('chat');
+  const d = document.createElement('div');
+  d.className = 'msg';
+
+  const optHTML = options.map((o, i) => `
+    <div class="opt" onclick="selectOpt(${i+1})">
+      <span class="opt-num">${i+1}</span>
+      <span class="opt-text">${esc(o)}</span>
+    </div>`).join('');
+
+  d.innerHTML = `
+    <div class="agent-msg">
+      <div class="agent-header">
+        <div class="agent-icon">⚡</div>
+        <span class="agent-name">OpsAgent</span>
+        <span class="agent-time">${ts()}</span>
+      </div>
+      <div class="agent-bubble">
+        <div class="intent update_task">multiple found</div>
+        <div>Multiple tasks matched. Select one:</div>
+        <div class="options">${optHTML}</div>
+        <div class="opt-hint">Or type: 1, 2, select 1…</div>
+      </div>
+    </div>`;
+  chat.appendChild(d);
+}
+
+function selectOpt(n) {
+  const ta = document.getElementById('msg');
+  ta.value = String(n);
+  send();
+}
+
+function addLog(msg, type) {
+  const wrap = document.getElementById('logs-wrap');
+  const d = document.createElement('div');
+  d.className = 'log-item';
+
+  let tag = 'ok', label = 'OK';
+  if (type === 'warn' || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('warn')) {
+    tag = 'warn'; label = 'WARN';
+  } else if (msg.toLowerCase().includes('created')) {
+    label = 'CREATE';
+  } else if (msg.toLowerCase().includes('moved')) {
+    label = 'MOVED';
+  } else if (msg.toLowerCase().includes('chat')) {
+    tag = 'info'; label = 'CHAT';
+  }
+
+  d.innerHTML = `
+    <div class="log-tag ${tag}">${label}</div>
+    <div class="log-msg">${esc(msg)}</div>
+    <div class="log-time">${ts()}</div>`;
+  wrap.insertBefore(d, wrap.firstChild);
+  while (wrap.children.length > 20) wrap.removeChild(wrap.lastChild);
+}
+
+function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ts()  { return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+function scrollDown() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
+</script>
 </body>
 </html>

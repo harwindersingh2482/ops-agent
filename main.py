@@ -1,15 +1,16 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 from routers import chat, router_agent, ops
 
-load_dotenv()
+app = FastAPI()
 
-app = FastAPI(
-    title="OpsAgent",
-    description="AI-powered operations engine that converts natural language into structured actions.",
-    version="1.0.0"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 templates = Jinja2Templates(directory="templates")
